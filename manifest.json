@@ -5,7 +5,8 @@
   "description": "Saves usernames and passwords from login forms so you can retrieve them anytime.",
   "permissions": [
     "storage",
-    "activeTab"
+    "activeTab",
+    "cookies"
   ],
   "host_permissions": [
     "<all_urls>"

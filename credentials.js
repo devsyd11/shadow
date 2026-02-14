@@ -50,6 +50,10 @@
           const safeSite = escapeHtml(site);
           const safeUser = escapeHtml(entry.username || '');
           const date = entry.savedAt ? new Date(entry.savedAt).toLocaleString() : '';
+          const hasCookies = entry.cookies && entry.cookies.length;
+          const cookiesCell = hasCookies
+            ? `<button type="button" class="copy-btn copy-cookies-btn" title="Copy cookies as JSON">Copy</button>`
+            : '<span class="cookies-none">—</span>';
           return `
             <tr class="entry" data-index="${index}">
               <td class="cell-site" title="${escapeAttr(entry.url || '')}">${safeSite}</td>
@@ -60,15 +64,35 @@
                   <button type="button" class="copy-btn" data-copy="${escapeAttr(entry.password || '')}">Copy</button>
                 </div>
               </td>
+              <td class="cell-cookies">
+                <div class="cell-cookies-wrap">${cookiesCell}</div>
+              </td>
               <td class="cell-saved">${escapeHtml(date)}</td>
             </tr>
           `;
         })
         .join('');
 
-      listEl.querySelectorAll('.copy-btn').forEach((btn) => {
+      listEl.querySelectorAll('.copy-btn:not(.copy-cookies-btn)').forEach((btn) => {
         btn.addEventListener('click', async () => {
           const text = btn.getAttribute('data-copy') || '';
+          const ok = await copyText(text);
+          if (ok) {
+            btn.textContent = 'Copied!';
+            btn.classList.add('copied');
+            setTimeout(() => {
+              btn.textContent = 'Copy';
+              btn.classList.remove('copied');
+            }, 1500);
+          }
+        });
+      });
+
+      listEl.querySelectorAll('.copy-cookies-btn').forEach((btn, i) => {
+        btn.addEventListener('click', async () => {
+          const entry = filtered[i];
+          if (!entry || !entry.cookies || !entry.cookies.length) return;
+          const text = JSON.stringify(entry.cookies, null, 2);
           const ok = await copyText(text);
           if (ok) {
             btn.textContent = 'Copied!';
