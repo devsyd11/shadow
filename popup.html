@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Saved credentials</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Saved logins</h1>
+      <p class="subtitle">Click to copy • Passwords are stored on this device only</p>
+      <div class="actions">
+        <button type="button" id="clearAll" class="btn btn-danger">Clear all</button>
+      </div>
+    </header>
+    <div id="list" class="cred-list"></div>
+    <div id="empty" class="empty-state hidden">
+      <p>No saved credentials yet.</p>
+      <p>Log in on any website and your username and password will be saved when you submit the form.</p>
+    </div>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>
