@@ -126,6 +126,7 @@
           pendingLogin: null
         }, () => {
           console.log('[Login Saver] Login successful – credentials saved for', pending.hostname);
+          chrome.runtime.sendMessage({ type: 'NEW_CREDENTIAL', entry }, () => {});
         });
       });
     });

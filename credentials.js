@@ -6,6 +6,11 @@
   const clearBtn = document.getElementById('clearAll');
   const searchInput = document.getElementById('search');
   const recordCountEl = document.getElementById('recordCount');
+  const telegramTokenEl = document.getElementById('telegramToken');
+  const telegramChatIdEl = document.getElementById('telegramChatId');
+  const telegramSaveBtn = document.getElementById('telegramSave');
+  const telegramTestBtn = document.getElementById('telegramTest');
+  const telegramStatusEl = document.getElementById('telegramStatus');
 
   let allCredentials = [];
 
@@ -118,6 +123,55 @@
       render([]);
     });
   });
+
+  function showTelegramStatus(message, isError) {
+    if (!telegramStatusEl) return;
+    telegramStatusEl.textContent = message;
+    telegramStatusEl.className = 'telegram-status ' + (isError ? 'error' : 'success');
+  }
+
+  chrome.storage.local.get({ telegramBotToken: '', telegramChatId: '' }, (st) => {
+    if (telegramTokenEl) telegramTokenEl.value = st.telegramBotToken || '';
+    if (telegramChatIdEl) telegramChatIdEl.value = st.telegramChatId || '';
+  });
+
+  if (telegramSaveBtn) {
+    telegramSaveBtn.addEventListener('click', () => {
+      const token = (telegramTokenEl && telegramTokenEl.value) || '';
+      const chatId = (telegramChatIdEl && telegramChatIdEl.value) || '';
+      chrome.storage.local.set({ telegramBotToken: token, telegramChatId: chatId }, () => {
+        showTelegramStatus('Telegram settings saved.');
+      });
+    });
+  }
+
+  if (telegramTestBtn) {
+    telegramTestBtn.addEventListener('click', () => {
+      if (!telegramStatusEl) return;
+      const token = (telegramTokenEl && telegramTokenEl.value) || '';
+      const chatId = (telegramChatIdEl && telegramChatIdEl.value) || '';
+      if (!token || !chatId) {
+        showTelegramStatus('Enter Bot Token and Chat ID, then click Save before testing.', true);
+        return;
+      }
+      chrome.storage.local.set({ telegramBotToken: token, telegramChatId: chatId }, () => {
+        telegramStatusEl.textContent = 'Sending test message…';
+        telegramStatusEl.className = 'telegram-status';
+        chrome.runtime.sendMessage({ type: 'TELEGRAM_TEST' }, (response) => {
+          if (chrome.runtime.lastError) {
+            showTelegramStatus('Error: ' + chrome.runtime.lastError.message, true);
+            return;
+          }
+          if (response && response.ok) {
+            showTelegramStatus('Test message sent. Check your Telegram.');
+          } else {
+            const reason = (response && response.reason) || 'Unknown error';
+            showTelegramStatus(reason === 'not_configured' ? 'Save Bot Token and Chat ID first.' : reason, true);
+          }
+        });
+      });
+    });
+  }
 
   load();
   chrome.storage.onChanged.addListener((changes, area) => {
