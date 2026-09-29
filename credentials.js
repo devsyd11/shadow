@@ -6,6 +6,7 @@
   const listEl = document.getElementById('list');
   const emptyEl = document.getElementById('empty');
   const clearBtn = document.getElementById('clearAll');
+  const exportBtn = document.getElementById('exportJson');
   const searchInput = document.getElementById('search');
   const recordCountEl = document.getElementById('recordCount');
   const paginationEl = document.getElementById('pagination');
@@ -225,6 +226,36 @@
     pageNextBtn.addEventListener('click', () => {
       currentPage += 1;
       render(allCredentials);
+    });
+  }
+
+  function exportToJson() {
+    const payload = {
+      exportedAt: new Date().toISOString(),
+      app: 'Shadow',
+      count: allCredentials.length,
+      credentials: allCredentials
+    };
+    const json = JSON.stringify(payload, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `shadow-credentials-${stamp}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  if (exportBtn) {
+    exportBtn.addEventListener('click', () => {
+      if (!allCredentials.length) {
+        alert('No credentials to export.');
+        return;
+      }
+      exportToJson();
     });
   }
 
