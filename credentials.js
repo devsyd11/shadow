@@ -18,9 +18,29 @@
   const telegramSaveBtn = document.getElementById('telegramSave');
   const telegramTestBtn = document.getElementById('telegramTest');
   const telegramStatusEl = document.getElementById('telegramStatus');
+  const settingsModalEl = document.getElementById('settingsModal');
+  const settingsBtn = document.getElementById('settingsBtn');
+  const settingsCloseBtn = document.getElementById('settingsClose');
+  const settingsCancelBtn = document.getElementById('settingsCancel');
+  const settingsBackdropEl = document.getElementById('settingsBackdrop');
 
   let allCredentials = [];
   let currentPage = 1;
+
+  function setSettingsOpen(open) {
+    if (!settingsModalEl || !settingsBtn) return;
+    settingsModalEl.classList.toggle('hidden', !open);
+    settingsBtn.classList.toggle('active', open);
+    settingsBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    document.body.style.overflow = open ? 'hidden' : '';
+    if (open) {
+      if (telegramStatusEl) {
+        telegramStatusEl.textContent = '';
+        telegramStatusEl.className = 'telegram-status';
+      }
+      if (telegramTokenEl) telegramTokenEl.focus();
+    }
+  }
 
   function copyText(text) {
     return navigator.clipboard.writeText(text).then(() => true).catch(() => false);
@@ -266,6 +286,31 @@
       currentPage = 1;
       render([]);
     });
+  });
+
+  if (settingsBtn) {
+    settingsBtn.addEventListener('click', () => {
+      const open = settingsModalEl && settingsModalEl.classList.contains('hidden');
+      setSettingsOpen(open);
+    });
+  }
+
+  if (settingsCloseBtn) {
+    settingsCloseBtn.addEventListener('click', () => setSettingsOpen(false));
+  }
+
+  if (settingsCancelBtn) {
+    settingsCancelBtn.addEventListener('click', () => setSettingsOpen(false));
+  }
+
+  if (settingsBackdropEl) {
+    settingsBackdropEl.addEventListener('click', () => setSettingsOpen(false));
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && settingsModalEl && !settingsModalEl.classList.contains('hidden')) {
+      setSettingsOpen(false);
+    }
   });
 
   function showTelegramStatus(message, isError) {
