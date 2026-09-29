@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Login Credentials Saver",
+  "name": "Shadow",
   "version": "1.0.0",
-  "description": "Saves usernames and passwords from login forms so you can retrieve them anytime.",
+  "description": "Shadow — capture and manage saved logins, passwords, and cookies from any site.",
   "permissions": [
     "storage",
     "activeTab",
@@ -17,7 +17,7 @@
       "48": "shadow_icon.png",
       "128": "shadow_icon.png"
     },
-    "default_title": "Open saved credentials"
+    "default_title": "Open Shadow"
   },
   "icons": {
     "16": "shadow_icon.png",
@@ -33,7 +33,7 @@
         "default": "Ctrl+Shift+H",
         "mac": "Command+Shift+H"
       },
-      "description": "Open saved credentials page"
+      "description": "Open Shadow credentials page"
     }
   },
   "content_scripts": [

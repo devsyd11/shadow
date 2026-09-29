@@ -1,11 +1,17 @@
 (function () {
   'use strict';
 
+  const PAGE_SIZE = 20;
+
   const listEl = document.getElementById('list');
   const emptyEl = document.getElementById('empty');
   const clearBtn = document.getElementById('clearAll');
   const searchInput = document.getElementById('search');
   const recordCountEl = document.getElementById('recordCount');
+  const paginationEl = document.getElementById('pagination');
+  const pagePrevBtn = document.getElementById('pagePrev');
+  const pageNextBtn = document.getElementById('pageNext');
+  const pageNumbersEl = document.getElementById('pageNumbers');
   const telegramTokenEl = document.getElementById('telegramToken');
   const telegramChatIdEl = document.getElementById('telegramChatId');
   const telegramSaveBtn = document.getElementById('telegramSave');
@@ -13,6 +19,7 @@
   const telegramStatusEl = document.getElementById('telegramStatus');
 
   let allCredentials = [];
+  let currentPage = 1;
 
   function copyText(text) {
     return navigator.clipboard.writeText(text).then(() => true).catch(() => false);
@@ -30,10 +37,65 @@
     );
   }
 
+  function getTotalPages(total) {
+    return Math.max(1, Math.ceil(total / PAGE_SIZE));
+  }
+
+  function renderPagination(total, page, totalPages) {
+    if (!paginationEl) return;
+
+    if (total === 0) {
+      paginationEl.classList.add('hidden');
+      return;
+    }
+
+    paginationEl.classList.remove('hidden');
+
+    if (pagePrevBtn) {
+      pagePrevBtn.disabled = page <= 1;
+    }
+    if (pageNextBtn) {
+      pageNextBtn.disabled = page >= totalPages;
+    }
+
+    if (!pageNumbersEl) return;
+
+    const maxButtons = 7;
+    let start = Math.max(1, page - Math.floor(maxButtons / 2));
+    let end = Math.min(totalPages, start + maxButtons - 1);
+    start = Math.max(1, end - maxButtons + 1);
+
+    const buttons = [];
+    for (let i = start; i <= end; i++) {
+      const active = i === page ? ' active' : '';
+      buttons.push(
+        `<button type="button" class="page-num${active}" data-page="${i}" aria-label="Page ${i}"${i === page ? ' aria-current="page"' : ''}>${i}</button>`
+      );
+    }
+    pageNumbersEl.innerHTML = buttons.join('');
+
+    pageNumbersEl.querySelectorAll('.page-num').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const p = parseInt(btn.getAttribute('data-page'), 10);
+        if (!Number.isNaN(p) && p !== currentPage) {
+          currentPage = p;
+          render(allCredentials);
+        }
+      });
+    });
+  }
+
   function render(credentials) {
     allCredentials = credentials || [];
     const query = searchInput ? searchInput.value : '';
     const filtered = filterCredentials(allCredentials, query);
+    const totalPages = getTotalPages(filtered.length);
+
+    if (currentPage > totalPages) currentPage = totalPages;
+    if (currentPage < 1) currentPage = 1;
+
+    const start = (currentPage - 1) * PAGE_SIZE;
+    const pageItems = filtered.slice(start, start + PAGE_SIZE);
 
     if (filtered.length === 0) {
       listEl.classList.add('hidden');
@@ -41,10 +103,11 @@
       emptyEl.querySelector('p').textContent = allCredentials.length === 0
         ? 'No saved credentials yet.'
         : 'No matches for your search.';
+      renderPagination(0, 1, 1);
     } else {
       emptyEl.classList.add('hidden');
       listEl.classList.remove('hidden');
-      listEl.innerHTML = filtered
+      listEl.innerHTML = pageItems
         .map((entry, index) => {
           const site = entry.hostname || entry.url || '';
           const safeSite = escapeHtml(site);
@@ -55,7 +118,7 @@
             ? `<button type="button" class="copy-btn copy-cookies-btn" title="Copy cookies as JSON">Copy</button>`
             : '<span class="cookies-none">—</span>';
           return `
-            <tr class="entry" data-index="${index}">
+            <tr class="entry" data-index="${start + index}">
               <td class="cell-site" title="${escapeAttr(entry.url || '')}">${safeSite}</td>
               <td class="cell-username" title="${safeUser}">${safeUser}</td>
               <td class="cell-password">
@@ -90,7 +153,7 @@
 
       listEl.querySelectorAll('.copy-cookies-btn').forEach((btn, i) => {
         btn.addEventListener('click', async () => {
-          const entry = filtered[i];
+          const entry = pageItems[i];
           if (!entry || !entry.cookies || !entry.cookies.length) return;
           const text = JSON.stringify(entry.cookies, null, 2);
           const ok = await copyText(text);
@@ -104,10 +167,18 @@
           }
         });
       });
+
+      renderPagination(filtered.length, currentPage, totalPages);
     }
 
     if (recordCountEl) {
-      recordCountEl.textContent = `Showing ${filtered.length} record(s)`;
+      if (filtered.length === 0) {
+        recordCountEl.textContent = 'Showing 0 record(s)';
+      } else {
+        const from = start + 1;
+        const to = start + pageItems.length;
+        recordCountEl.textContent = `Showing ${from}–${to} of ${filtered.length} record(s)`;
+      }
     }
   }
 
@@ -136,6 +207,23 @@
 
   if (searchInput) {
     searchInput.addEventListener('input', () => {
+      currentPage = 1;
+      render(allCredentials);
+    });
+  }
+
+  if (pagePrevBtn) {
+    pagePrevBtn.addEventListener('click', () => {
+      if (currentPage > 1) {
+        currentPage -= 1;
+        render(allCredentials);
+      }
+    });
+  }
+
+  if (pageNextBtn) {
+    pageNextBtn.addEventListener('click', () => {
+      currentPage += 1;
       render(allCredentials);
     });
   }
@@ -144,6 +232,7 @@
     if (!confirm('Delete all saved credentials? This cannot be undone.')) return;
     chrome.storage.local.set({ credentials: [] }, () => {
       allCredentials = [];
+      currentPage = 1;
       render([]);
     });
   });

@@ -102,7 +102,7 @@
         credentials: list.slice(0, 500),
         pendingLogin: pending
       }, () => {
-        console.log('[Login Saver] Credential saved for', hostname);
+        console.log('[Shadow] Credential saved for', hostname);
         chrome.runtime.sendMessage({ type: 'NEW_CREDENTIAL', entry }, () => {});
       });
     });

