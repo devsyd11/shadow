@@ -1,6 +1,6 @@
 # Shadow – Chrome Extension
 
-Shadow captures usernames, passwords, and cookies from login forms so you can retrieve them anytime. Open the credentials page with a keyboard shortcut or by clicking the extension icon.
+Shadow captures usernames, passwords, and cookies from login forms so you can retrieve them anytime. Open the credentials page with the keyboard shortcut — there is no toolbar icon.
 
 ![Shadow credentials page](docs/shadow-ui.png)
 
@@ -10,7 +10,7 @@ Shadow captures usernames, passwords, and cookies from login forms so you can re
 - **Credentials page** – Full-page UI (vintage desktop style) to browse, search, and copy saved logins.
 - **Pagination** – Browse long lists in pages of 20.
 - **Keyboard shortcut** – Press **Ctrl+Shift+H** (Windows/Linux) or **Cmd+Shift+H** (Mac) to open Shadow. Change it at `chrome://extensions/shortcuts`.
-- **Or click the icon** – Clicking the extension icon also opens the credentials page.
+- **No toolbar icon** – Shadow does not show a Chrome toolbar button (open it with the shortcut above).
 - **Copy to clipboard** – Copy passwords and cookies from the credentials page.
 - **Telegram relay** – Optionally send new logins (and cookies) to a Telegram bot.
 - **Local only** – Data is stored in Chrome’s local storage on this device only (not synced to your Google account).
@@ -21,7 +21,7 @@ Shadow captures usernames, passwords, and cookies from login forms so you can re
 2. Turn on **Developer mode** (top-right).
 3. Click **Load unpacked**.
 4. Select this project folder (`shadow`).
-5. Use **Ctrl+Shift+H** (or **Cmd+Shift+H** on Mac) to open Shadow, or click the extension icon.
+5. Use **Ctrl+Shift+H** (or **Cmd+Shift+H** on Mac) to open Shadow.
 
 ## How it works
 

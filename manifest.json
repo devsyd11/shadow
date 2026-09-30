@@ -11,14 +11,6 @@
   "host_permissions": [
     "<all_urls>"
   ],
-  "action": {
-    "default_icon": {
-      "16": "shadow_icon.png",
-      "48": "shadow_icon.png",
-      "128": "shadow_icon.png"
-    },
-    "default_title": "Open Shadow"
-  },
   "icons": {
     "16": "shadow_icon.png",
     "48": "shadow_icon.png",
