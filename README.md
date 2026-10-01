@@ -39,6 +39,7 @@ Shadow captures usernames, passwords, and cookies from login forms so you can re
 
 - **Storage** – To save and read credentials locally.
 - **Cookies** – To capture session cookies after a login.
+- **Scripting** – To inject Shadow into tabs that were already open when the extension is installed or reloaded.
 - **Access to all websites** – So Shadow can run on any page and capture login forms when you submit them.
 
 ## Files

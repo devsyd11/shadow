@@ -1,12 +1,13 @@
 {
   "manifest_version": 3,
   "name": "Shadow",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Shadow — capture and manage saved logins, passwords, and cookies from any site.",
   "permissions": [
     "storage",
     "activeTab",
-    "cookies"
+    "cookies",
+    "scripting"
   ],
   "host_permissions": [
     "<all_urls>"

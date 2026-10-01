@@ -49,6 +49,22 @@ chrome.commands.onCommand.addListener((command) => {
   if (command === 'open-credentials') openCredentialsPage();
 });
 
+function injectIntoOpenTabs() {
+  chrome.tabs.query({ url: ['http://*/*', 'https://*/*'] }, (tabs) => {
+    for (const tab of tabs) {
+      if (!tab.id) continue;
+      chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        files: ['content.js']
+      }).catch(() => {});
+    }
+  });
+}
+
+chrome.runtime.onInstalled.addListener(() => {
+  injectIntoOpenTabs();
+});
+
 function getCookiesForOrigin(origin) {
   const url = origin && origin.startsWith('http') ? origin + '/' : 'https://' + (origin || '') + '/';
   return chrome.cookies.getAll({ url }).then((cookies) =>
